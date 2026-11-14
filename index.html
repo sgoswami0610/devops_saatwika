@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f6">
+  <title>Mintwise — Personal finance, made simple</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17241f;
+      --muted: #78827d;
+      --line: #e8ece9;
+      --paper: #fff;
+      --canvas: #f5f7f6;
+      --green: #176b4a;
+      --green-dark: #12563c;
+      --green-pale: #e8f4ed;
+      --red: #d65b57;
+      --amber: #d8973d;
+      --shadow: 0 8px 26px rgba(27, 45, 37, .045);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--canvas); color: var(--ink); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(23, 107, 74, .25);
+      outline-offset: 2px;
+    }
+    .app-shell { min-height: 100vh; }
+    .sidebar {
+      position: fixed; inset: 0 auto 0 0; z-index: 4; width: 246px; padding: 27px 17px 18px;
+      display: flex; flex-direction: column; background: #fff; border-right: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 13px; margin-bottom: 47px; }
+    .brand-mark {
+      width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px;
+      color: #fff; background: var(--green); font-size: 19px; font-weight: 800;
+    }
+    .brand-name { font-size: 18px; font-weight: 750; letter-spacing: -.5px; }
+    .brand-name span { color: var(--green); }
+    .nav-label { padding: 0 13px; margin: 0 0 10px; color: #9aa39e; font-size: 10px; font-weight: 750; letter-spacing: 1.15px; text-transform: uppercase; }
+    .nav-list { display: grid; gap: 5px; }
+    .nav-button {
+      border: 0; width: 100%; padding: 11px 13px; display: flex; align-items: center; gap: 12px;
+      text-align: left; color: #77817b; border-radius: 10px; background: transparent; font-size: 13px; font-weight: 600;
+      transition: background .15s, color .15s;
+    }
+    .nav-button:hover { color: var(--green); background: #f7faf8; }
+    .nav-button.active { color: var(--green); background: var(--green-pale); font-weight: 700; }
+    .nav-icon { display: inline-grid; place-items: center; width: 19px; font-size: 16px; }
+    .sidebar-spacer { flex: 1; }
+    .privacy-note { margin: 14px 7px 17px; padding: 13px 12px; color: #64736a; background: #f4f8f5; border: 1px solid #e8f0ea; border-radius: 11px; font-size: 11px; line-height: 1.55; }
+    .privacy-note strong { display: block; margin-bottom: 3px; color: #42544a; font-size: 11px; }
+    .profile { display: flex; align-items: center; gap: 10px; padding: 15px 8px 0; border-top: 1px solid var(--line); }
+    .avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #624d3e; background: #f2e8de; font-size: 12px; font-weight: 700; }
+    .profile-name { font-size: 12px; font-weight: 700; }
+    .profile-caption { margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .main { min-height: 100vh; margin-left: 246px; padding: 0 39px 48px; }
+    .topbar { height: 78px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .breadcrumb { color: var(--muted); font-size: 12px; }
+    .breadcrumb strong { color: var(--ink); font-weight: 650; }
+    .top-actions { display: flex; align-items: center; gap: 12px; }
+    .month-select, .secondary-button {
+      height: 37px; padding: 0 12px; color: #4c5951; border: 1px solid #e3e8e4; border-radius: 9px; background: #fff; font-size: 12px;
+    }
+    .secondary-button:hover { border-color: #b6c8bd; }
+    .primary-button {
+      min-height: 39px; padding: 0 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      color: #fff; border: 0; border-radius: 9px; background: var(--green); font-size: 12px; font-weight: 650;
+      transition: background .15s, transform .15s;
+    }
+    .primary-button:hover { background: var(--green-dark); transform: translateY(-1px); }
+    .page { max-width: 1220px; margin: 0 auto; }
+    .page-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 15px; margin: 30px 0 22px; }
+    .eyebrow { margin-bottom: 6px; color: var(--green); font-size: 10px; font-weight: 750; letter-spacing: 1.25px; text-transform: uppercase; }
+    h1 { margin: 0; font-size: 27px; letter-spacing: -.8px; line-height: 1.2; }
+    .subtitle { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; }
+    .card { background: var(--paper); border: 1px solid #edf0ee; border-radius: 13px; box-shadow: var(--shadow); }
+    .summary-card { padding: 17px 18px 16px; min-height: 125px; }
+    .summary-top { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 11px; }
+    .summary-icon { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 9px; color: var(--green); background: #edf6f0; font-size: 14px; }
+    .summary-value { margin: 13px 0 6px; font-size: 22px; font-weight: 730; letter-spacing: -.6px; }
+    .summary-foot { color: #8b948f; font-size: 10px; }
+    .positive { color: var(--green); }
+    .negative { color: var(--red); }
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.28fr) minmax(290px, .82fr); gap: 16px; margin-top: 17px; }
+    .panel { padding: 19px 20px; }
+    .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .panel-title { margin: 0; font-size: 13px; font-weight: 720; }
+    .panel-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 10px; }
+    .legend { display: flex; gap: 14px; margin-top: 19px; color: #69756e; font-size: 10px; }
+    .legend span { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+    .dot.expense { background: #e4a957; }
+    .trend-chart { height: 157px; margin-top: 13px; display: grid; grid-template-columns: repeat(var(--trend-count, 6), minmax(0, 1fr)); align-items: end; gap: 15px; padding: 0 4px; }
+    .month-bars { height: 130px; position: relative; display: flex; justify-content: center; align-items: flex-end; gap: 5px; border-bottom: 1px solid #edf0ee; }
+    .month-bars::before, .month-bars::after { content: ""; position: absolute; z-index: 0; left: 0; right: 0; border-top: 1px dashed #edf0ee; }
+    .month-bars::before { top: 33%; }
+    .month-bars::after { top: 66%; }
+    .bar { z-index: 1; width: 13px; min-height: 3px; border-radius: 4px 4px 0 0; background: #4f9c73; }
+    .bar.expense { background: #efc27f; }
+    .month-label { padding-top: 8px; text-align: center; color: #8a948e; font-size: 9px; }
+    .chart-empty { height: 185px; display: grid; place-items: center; color: var(--muted); text-align: center; font-size: 12px; }
+    .category-layout { min-height: 195px; display: flex; align-items: center; justify-content: center; gap: 21px; padding-top: 12px; }
+    .donut { width: 143px; height: 143px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(#dce7df 0 100%); position: relative; }
+    .donut::after { content: ""; position: absolute; width: 94px; height: 94px; border-radius: 50%; background: white; }
+    .donut-center { position: relative; z-index: 1; text-align: center; }
+    .donut-center strong { display: block; font-size: 16px; }
+    .donut-center span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .category-legend { min-width: 125px; display: grid; gap: 12px; }
+    .category-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; color: #68746d; font-size: 10px; }
+    .category-row-label { display: flex; align-items: center; gap: 7px; }
+    .category-swatch { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 3px; }
+    .category-row strong { color: #34443b; font-size: 10px; font-weight: 650; }
+    .budget-list { display: grid; gap: 16px; margin-top: 20px; }
+    .budget-item-top { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; font-size: 11px; }
+    .budget-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    .budget-amount { color: #78827d; font-size: 10px; }
+    .progress-track { height: 6px; overflow: hidden; border-radius: 20px; background: #eef1ef; }
+    .progress-fill { height: 100%; border-radius: inherit; background: #61a17c; }
+    .progress-fill.warning { background: #e0a34d; }
+    .progress-fill.over { background: #d96b61; }
+    .budget-foot { display: flex; justify-content: space-between; margin-top: 6px; color: #909993; font-size: 9px; }
+    .recent-panel { margin-top: 17px; padding: 19px 20px 4px; }
+    .link-button { padding: 4px 0; color: var(--green); border: 0; background: transparent; font-size: 10px; font-weight: 650; }
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 15px 9px 10px; color: #939c97; border-bottom: 1px solid var(--line); font-size: 9px; font-weight: 650; letter-spacing: .45px; text-transform: uppercase; }
+    td { padding: 12px 9px; border-bottom: 1px solid #f0f2f1; font-size: 11px; white-space: nowrap; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .transaction-name { display: flex; align-items: center; gap: 9px; font-weight: 620; }
+    .transaction-icon { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 9px; background: #f3f5f3; font-size: 13px; }
+    .transaction-note { margin-top: 3px; color: #9aa19d; font-size: 9px; font-weight: 400; }
+    .type-pill { display: inline-block; padding: 4px 7px; color: #66736b; background: #f3f5f3; border-radius: 5px; font-size: 9px; }
+    .amount { text-align: right; font-weight: 650; }
+    .table-actions { display: flex; justify-content: flex-end; gap: 7px; }
+    .icon-button { padding: 5px; color: #86918a; border: 0; border-radius: 6px; background: transparent; font-size: 12px; }
+    .icon-button:hover { color: var(--green); background: #f2f7f3; }
+    .filters { display: flex; flex-wrap: wrap; gap: 9px; margin: 17px 0 13px; }
+    .filter-input, .filter-select, .form-input, .form-select {
+      height: 37px; padding: 0 11px; color: #44524a; border: 1px solid #e4e9e5; border-radius: 8px; background: #fff; font-size: 11px;
+    }
+    .filter-input { min-width: 195px; flex: 1; }
+    .filter-select { min-width: 115px; }
+    .content-panel { padding: 19px 20px; }
+    .budget-management { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin-top: 17px; }
+    .budget-edit-card { padding: 15px; border: 1px solid #edf0ee; border-radius: 10px; }
+    .budget-edit-title { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 650; }
+    .budget-edit-fields { display: flex; align-items: center; gap: 9px; margin-top: 13px; }
+    .budget-edit-fields .form-input { min-width: 0; flex: 1; }
+    .budget-edit-fields .primary-button { min-height: 36px; }
+    .category-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; margin-top: 17px; }
+    .category-card { min-height: 65px; padding: 12px; display: flex; align-items: center; gap: 10px; border: 1px solid #edf0ee; border-radius: 10px; }
+    .category-card-name { flex: 1; font-size: 11px; font-weight: 650; }
+    .category-card-meta { color: var(--muted); font-size: 9px; }
+    .settings-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; margin-top: 17px; }
+    .setting-card { padding: 18px; }
+    .setting-card h2 { margin: 0; font-size: 13px; }
+    .setting-card p { margin: 6px 0 15px; color: var(--muted); font-size: 10px; line-height: 1.55; }
+    .form-field { display: grid; gap: 6px; margin: 0 0 13px; }
+    .form-field label { color: #69756e; font-size: 10px; font-weight: 600; }
+    .setting-card .form-input, .setting-card .form-select { width: 100%; }
+    .danger-zone { border-color: #f1e4e2; }
+    .danger-zone h2 { color: #a54843; }
+    .danger-button { min-height: 36px; padding: 0 12px; color: #a54843; border: 1px solid #ead3d1; border-radius: 8px; background: #fff; font-size: 10px; font-weight: 650; }
+    .empty-state { padding: 30px 15px; color: var(--muted); text-align: center; font-size: 11px; }
+    .empty-state strong { display: block; margin-bottom: 6px; color: #45554b; font-size: 13px; }
+    .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 29, 22, .36); }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(100%, 430px); padding: 23px; border-radius: 15px; background: #fff; box-shadow: 0 20px 60px rgba(15, 29, 22, .2); }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
+    .modal-header h2 { margin: 0; font-size: 18px; letter-spacing: -.4px; }
+    .modal-header p { margin: 5px 0 0; color: var(--muted); font-size: 10px; }
+    .close-button { width: 29px; height: 29px; border: 0; border-radius: 7px; color: #738078; background: #f4f6f4; font-size: 17px; }
+    .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 4px; margin-bottom: 15px; border-radius: 9px; background: #f3f5f3; }
+    .type-option { height: 33px; border: 0; border-radius: 6px; color: #7d8781; background: transparent; font-size: 11px; font-weight: 600; }
+    .type-option.selected { color: var(--green); background: #fff; box-shadow: 0 1px 5px rgba(20, 40, 30, .08); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    .form-grid .form-field { margin-bottom: 12px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-input, .form-select { width: 100%; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 6px; }
+    .toast { position: fixed; z-index: 20; right: 24px; bottom: 24px; max-width: calc(100vw - 48px); padding: 12px 16px; color: #fff; border-radius: 9px; background: #243c30; box-shadow: var(--shadow); font-size: 11px; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-undo { margin-left: 12px; padding: 3px 5px; color: #d7eddf; border: 0; border-radius: 4px; background: transparent; font-size: 11px; font-weight: 700; text-decoration: underline; pointer-events: auto; }
+    .mobile-menu { display: none; }
+    .floating-add { position: fixed; z-index: 3; right: 25px; bottom: 24px; width: 52px; height: 52px; display: grid; place-items: center; color: #fff; border: 0; border-radius: 50%; background: var(--green); box-shadow: 0 8px 22px rgba(23, 107, 74, .28); font-size: 25px; }
+    .floating-add:hover { background: var(--green-dark); }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 13px; }
+    .filter-row .filter-input { min-width: 100px; }
+    .bulk-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 11px; margin: 0 0 10px; color: #536159; border-radius: 8px; background: #f5f8f6; font-size: 11px; }
+    .bulk-toolbar[hidden] { display: none; }
+    .check-cell { width: 32px; text-align: center; }
+    .check-cell input { accent-color: var(--green); }
+    .account-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; margin-top: 16px; }
+    .account-card { padding: 16px; }
+    .account-card-top { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 10px; }
+    .account-card-name { margin-top: 12px; font-size: 13px; font-weight: 700; }
+    .account-card-balance { margin-top: 7px; font-size: 21px; font-weight: 730; letter-spacing: -.5px; }
+    .form-grid .form-field.third { grid-column: auto; }
+    .import-modal { width: min(100%, 760px); max-height: min(90vh, 760px); overflow-y: auto; }
+    .mapping-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; margin: 14px 0; }
+    .mapping-grid .form-field { margin-bottom: 0; }
+    .preview-table { max-height: 260px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+    .preview-table th { position: sticky; top: 0; z-index: 1; background: #f8faf8; }
+    .import-summary { margin: 10px 0; color: #6f7b73; font-size: 11px; }
+    .alert-banner { padding: 11px 13px; margin: 0 0 14px; color: #795722; border: 1px solid #f0dfc2; border-radius: 9px; background: #fff8eb; font-size: 11px; }
+    .goal-badge { padding: 4px 8px; border-radius: 6px; color: #64736a; background: #f1f4f2; font-size: 9px; }
+    @media (max-width: 1050px) {
+      .sidebar { width: 220px; }
+      .main { margin-left: 220px; padding-right: 25px; padding-left: 25px; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .category-layout { justify-content: flex-start; }
+      .account-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 680px) {
+      .sidebar { width: 0; padding: 0; overflow: hidden; border: 0; transition: width .2s; }
+      .sidebar.mobile-open { width: 246px; padding: 22px 15px 16px; border-right: 1px solid var(--line); box-shadow: 10px 0 30px rgba(20, 35, 28, .12); }
+      .main { margin-left: 0; padding: 0 16px 35px; }
+      .topbar { height: 62px; }
+      .mobile-menu { display: inline-grid; place-items: center; width: 33px; height: 33px; margin-right: 9px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+      .breadcrumb-wrap { display: flex; align-items: center; }
+      .month-select { height: 34px; max-width: 132px; padding: 0 7px; font-size: 10px; }
+      .top-actions { gap: 7px; }
+      .top-actions .primary-button { min-height: 34px; padding: 0 9px; font-size: 10px; }
+      .top-actions .primary-button .add-label { display: none; }
+      .page-heading { margin: 24px 0 17px; }
+      h1 { font-size: 23px; }
+      .summary-grid { gap: 9px; }
+      .summary-card { min-height: 112px; padding: 13px; }
+      .summary-value { margin: 11px 0 5px; font-size: 19px; }
+      .dashboard-grid { gap: 11px; margin-top: 11px; }
+      .panel { padding: 16px; }
+      .recent-panel { margin-top: 11px; padding: 16px 12px 3px; }
+      .trend-chart { gap: 7px; }
+      .bar { width: 10px; }
+      .category-layout { gap: 14px; }
+      .donut { width: 125px; height: 125px; }
+      .donut::after { width: 82px; height: 82px; }
+      .category-legend { min-width: 105px; }
+      .budget-management { grid-template-columns: 1fr; }
+      .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .settings-grid { grid-template-columns: 1fr; }
+      .mapping-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .floating-add { right: 16px; bottom: 16px; }
+      .content-panel { padding: 15px 12px; }
+      th, td { padding-right: 7px; padding-left: 7px; }
+    }
+    @media (max-width: 390px) {
+      .main { padding-right: 11px; padding-left: 11px; }
+      .breadcrumb { font-size: 10px; }
+      .month-select { max-width: 115px; }
+      .category-layout { flex-direction: column; }
+      .category-legend { width: 100%; grid-template-columns: 1fr 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .full { grid-column: auto; }
+      .account-grid, .mapping-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <div class="brand"><div class="brand-mark" aria-hidden="true">m</div><div class="brand-name">mint<span>wise</span></div></div>
+      <p class="nav-label">Workspace</p>
+      <nav class="nav-list" aria-label="Workspace">
+        <button class="nav-button active" data-page="dashboard"><span class="nav-icon">◫</span>Overview</button>
+        <button class="nav-button" data-page="transactions"><span class="nav-icon">↕</span>Transactions</button>
+        <button class="nav-button" data-page="accounts"><span class="nav-icon">▣</span>Accounts</button>
+        <button class="nav-button" data-page="budgets"><span class="nav-icon">◷</span>Budgets</button>
+        <button class="nav-button" data-page="categories"><span class="nav-icon">▦</span>Categories</button>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <p class="nav-label">Preferences</p>
+      <nav class="nav-list" aria-label="Preferences">
+        <button class="nav-button" data-page="settings"><span class="nav-icon">⚙</span>Settings</button>
+      </nav>
+      <div class="privacy-note"><strong>Just you and your money</strong>Your data stays in this browser. No bank connections, ever.</div>
+      <div class="profile"><div class="avatar" id="profileAvatar">Y</div><div><div class="profile-name" id="profileName">Your account</div><div class="profile-caption">Personal workspace</div></div></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumb-wrap">
+          <button class="mobile-menu" id="mobileMenu" aria-label="Open navigation">☰</button>
+          <div class="breadcrumb">Workspace <span aria-hidden="true"> / </span> <strong id="breadcrumbCurrent">Overview</strong></div>
+        </div>
+        <div class="top-actions">
+          <select class="month-select" id="monthSelect" aria-label="Select month"></select>
+          <button class="primary-button" id="quickAdd"><span aria-hidden="true">＋</span><span class="add-label">Add transaction</span></button>
+        </div>
+      </header>
+      <div class="page" id="pageContent"></div>
+    </main>
+  </div>
+  <button class="floating-add" id="floatingAdd" aria-label="Add transaction" title="Add transaction">＋</button>
+
+  <div class="modal-backdrop" id="transactionModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <form class="modal" id="transactionForm">
+      <div class="modal-header">
+        <div><h2 id="modalTitle">Add transaction</h2><p>Keep it simple. You can edit this anytime.</p></div>
+        <button class="close-button" type="button" id="closeModal" aria-label="Close">×</button>
+      </div>
+      <div class="type-toggle" role="group" aria-label="Transaction type">
+        <button class="type-option selected" type="button" data-type="expense">Expense</button>
+        <button class="type-option" type="button" data-type="income">Income</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-field full"><label for="txAmount">Amount</label><input class="form-input" id="txAmount" type="number" min="0.01" step="0.01" placeholder="0.00" required></div>
+        <div class="form-field"><label for="txDate">Date</label><input class="form-input" id="txDate" type="date" required></div>
+        <div class="form-field"><label for="txCategory">Category</label><select class="form-select" id="txCategory" required></select></div>
+        <div class="form-field full"><label for="txAccount">Account</label><select class="form-select" id="txAccount" required></select></div>
+        <div class="form-field full"><label for="txNote">Note <span style="font-weight:400;color:#929b95">(optional)</span></label><input class="form-input" id="txNote" maxlength="120" placeholder="What was this for?"></div>
+      </div>
+      <div class="modal-actions"><button class="secondary-button" type="button" id="cancelModal">Cancel</button><button class="primary-button" type="submit" id="saveTransaction">Save transaction</button></div>
+    </form>
+  </div>
+      <div class="modal-backdrop" id="importModal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+        <section class="modal import-modal">
+          <div class="modal-header">
+            <div><h2 id="importTitle">Import transactions</h2><p>Choose a CSV, match its columns, and preview before importing.</p></div>
+            <button class="close-button" type="button" id="closeImport" aria-label="Close">×</button>
+          </div>
+          <div id="importContent"></div>
+        </section>
+      </div>
+      <div class="modal-backdrop" id="accountModal" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+        <form class="modal" id="accountForm">
+          <div class="modal-header">
+            <div><h2 id="accountTitle">Add account</h2><p>Track a cash, bank, credit card, or wallet balance.</p></div>
+            <button class="close-button" type="button" id="closeAccount" aria-label="Close">×</button>
+          </div>
+          <div class="form-grid">
+            <div class="form-field full"><label for="accountName">Account name</label><input class="form-input" id="accountName" maxlength="40" placeholder="e.g. Everyday checking" required></div>
+            <div class="form-field"><label for="accountType">Account type</label><select class="form-select" id="accountType"><option value="cash">Cash</option><option value="bank">Bank</option><option value="credit">Credit card</option><option value="wallet">Wallet</option></select></div>
+            <div class="form-field"><label for="accountOpening">Opening balance</label><input class="form-input" id="accountOpening" type="number" step="0.01" value="0" required></div>
+          </div>
+          <div class="modal-actions"><button class="secondary-button" type="button" id="cancelAccount">Cancel</button><button class="primary-button" type="submit">Save account</button></div>
+        </form>
+      </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+      const STORAGE_KEY = "mintwise-finance-v1";
+      const palette = ["#4c956c", "#e7a951", "#6689c7", "#d47b70", "#9b82c4", "#55a5a0", "#d28c54", "#809b50"];
+      const iconMap = { Food: "◉", Groceries: "◉", Rent: "⌂", Transport: "↗", Bills: "ϟ", Utilities: "ϟ", Health: "✚", Entertainment: "♫", Shopping: "▣", Education: "▤", Travel: "✈", "Personal care": "✦", Salary: "↙", Freelance: "⌁", Other: "◌" };
+      const defaultCategories = [
+        { id: "food", name: "Food", type: "expense", archived: false },
+        { id: "groceries", name: "Groceries", type: "expense", archived: false },
+        { id: "rent", name: "Rent", type: "expense", archived: false },
+        { id: "transport", name: "Transport", type: "expense", archived: false },
+        { id: "bills", name: "Bills", type: "expense", archived: false },
+        { id: "utilities", name: "Utilities", type: "expense", archived: false },
+        { id: "shopping", name: "Shopping", type: "expense", archived: false },
+        { id: "health", name: "Health", type: "expense", archived: false },
+        { id: "entertainment", name: "Entertainment", type: "expense", archived: false },
+        { id: "education", name: "Education", type: "expense", archived: false },
+        { id: "travel", name: "Travel", type: "expense", archived: false },
+        { id: "personal-care", name: "Personal care", type: "expense", archived: false },
+        { id: "salary", name: "Salary", type: "income", archived: false },
+        { id: "freelance", name: "Freelance", type: "income", archived: false },
+        { id: "other", name: "Other", type: "both", archived: false }
+      ];
+      const pageTitles = { dashboard: "Overview", transactions: "Transactions", accounts: "Accounts", budgets: "Budgets", categories: "Categories", settings: "Settings" };
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+      const localDate = (date = new Date()) => {
+        const offset = date.getTimezoneOffset();
+        return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 10);
+      };
+      const today = localDate();
+      const monthKey = (date) => date.slice(0, 7);
+      const id = () => window.crypto && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const baseState = () => ({
+        transactions: [], categories: defaultCategories.map(category => ({ ...category })),
+        accounts: [{ id: "cash-default", name: "Cash", type: "cash", openingBalance: 0, archived: false }],
+        budgets: {}, currency: "INR", displayName: "Your account", dateFormat: "DD MMM YYYY", amountsInMinor: true,
+        lastCategoryId: "food", lastAccountId: "cash-default"
+      });
+      function loadState() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (!saved) return baseState();
+          const parsed = JSON.parse(saved);
+          const amountsInMinor = parsed.amountsInMinor === true;
+          const storedBudgets = parsed.budgets && typeof parsed.budgets === "object" ? parsed.budgets : {};
+          const storedCategories = Array.isArray(parsed.categories) ? parsed.categories : [];
+          const categoryMap = new Map(defaultCategories.map(category => [category.id, category]));
+          storedCategories.forEach(category => categoryMap.set(category.id, category));
+          const accounts = Array.isArray(parsed.accounts) && parsed.accounts.length
+            ? parsed.accounts
+            : baseState().accounts;
+          const defaultAccountId = accounts.find(account => !account.archived)?.id || "cash-default";
+          return {
+            ...baseState(), ...parsed,
+            amountsInMinor: true,
+            transactions: Array.isArray(parsed.transactions) ? parsed.transactions.map(tx => ({
+              ...tx, amount: Math.round(Number(tx.amount || 0) * (amountsInMinor ? 1 : 100)),
+              accountId: tx.accountId || defaultAccountId
+            })) : [],
+            categories: [...categoryMap.values()],
+            accounts: accounts.map(account => ({
+              ...account, openingBalance: Math.round(Number(account.openingBalance || 0) * (amountsInMinor ? 1 : 100))
+            })),
+            lastAccountId: parsed.lastAccountId || defaultAccountId,
+            budgets: Object.fromEntries(Object.entries(storedBudgets).map(([key, amount]) => [
+              key, Math.round(Number(amount || 0) * (amountsInMinor ? 1 : 100))
+            ]))
+          };
+        } catch (error) {
+          console.error("Could not load saved finance data.", error);
+          return baseState();
+        }
+      }
+      let state = loadState();
+      let activePage = "dashboard";
+      let selectedMonth = monthKey(today);
+      let editingId = null;
+      let selectedType = "expense";
+      let trendMonths = 6;
+      let importHeaders = [];
+      let importRows = [];
+      let importMapping = {};
+      let toastTimer;
+      function persist() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (error) {
+          console.error("Could not save finance data.", error);
+          showToast("Could not save. Check your browser storage settings.");
+        }
+      }
+      const getCategory = categoryId => state.categories.find(item => item.id === categoryId);
+      const categoryName = categoryId => (getCategory(categoryId) || { name: "Other" }).name;
+      const getAccount = accountId => state.accounts.find(item => item.id === accountId);
+      const accountName = accountId => (getAccount(accountId) || { name: "Cash" }).name;
+      function accountBalance(account, transactions = state.transactions) {
+        return transactions.filter(tx => tx.accountId === account.id).reduce((balance, tx) => {
+          const sign = account.type === "credit" ? (tx.type === "expense" ? 1 : -1) : (tx.type === "income" ? 1 : -1);
+          return balance + sign * Number(tx.amount);
+        }, Number(account.openingBalance) || 0);
+      }
+      function netPosition() {
+        return state.accounts.reduce((total, account) => total + (account.type === "credit" ? -accountBalance(account) : accountBalance(account)), 0);
+      }
+      const currencyCode = () => state.currency || "INR";
+      function money(amount) {
+        try {
+          return new Intl.NumberFormat(undefined, { style: "currency", currency: currencyCode(), maximumFractionDigits: 2 }).format((Number(amount) || 0) / 100);
+        } catch {
+          return `${currencyCode()} ${((Number(amount) || 0) / 100).toFixed(2)}`;
+        }
+      }
+      function formatDate(value) {
+        if (!value) return "";
+        const date = new Date(`${value}T12:00:00`);
+        if (state.dateFormat === "MM/DD/YYYY") return new Intl.DateTimeFormat(undefined, { month: "2-digit", day: "2-digit", year: "numeric" }).format(date);
+        if (state.dateFormat === "YYYY-MM-DD") return value;
+        return new Intl.DateTimeFormat(undefined, { day: "2-digit", month: "short", year: "numeric" }).format(date);
+      }
+      function safeText(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+      }
+      function showToast(message) {
+        const toast = $("#toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
+      }
+      function showUndoToast(message, undo) {
+        const toast = $("#toast");
+        toast.textContent = "";
+        toast.append(document.createTextNode(message));
+        const button = document.createElement("button");
+        button.className = "toast-undo";
+        button.type = "button";
+        button.textContent = "Undo";
+        button.addEventListener("click", () => {
+          undo();
+          toast.classList.remove("show");
+        }, { once: true });
+        toast.append(button);
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 5000);
+      }
+      function monthTransactions(month = selectedMonth) {
+        return state.transactions.filter(tx => monthKey(tx.date) === month);
+      }
+      function monthLabel(value) {
+        const [year, month] = value.split("-").map(Number);
+        return new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date(year, month - 1, 1));
+      }
+      function renderMonthSelect() {
+        const select = $("#monthSelect");
+        const options = new Set([selectedMonth]);
+        for (let i = 0; i < 12; i++) {
+          const date = new Date();
+          date.setDate(1);
+          date.setMonth(date.getMonth() - i);
+          options.add(monthKey(localDate(date)));
+        }
+        state.transactions.forEach(tx => options.add(monthKey(tx.date)));
+        select.innerHTML = [...options].sort().reverse().map(month => `<option value="${month}">${safeText(monthLabel(month))}</option>`).join("");
+        select.value = selectedMonth;
+      }
+      function setPage(page) {
+        activePage = page;
+        $$(".nav-button[data-page]").forEach(button => button.classList.toggle("active", button.dataset.page === page));
+        $("#breadcrumbCurrent").textContent = pageTitles[page];
+        $("#sidebar").classList.remove("mobile-open");
+        render();
+      }
+      function render() {
+        renderMonthSelect();
+        $("#profileName").textContent = state.displayName || "Your account";
+        $("#profileAvatar").textContent = (state.displayName || "Y").trim().charAt(0).toUpperCase();
+        const pages = { dashboard: renderDashboard, transactions: renderTransactions, accounts: renderAccounts, budgets: renderBudgets, categories: renderCategories, settings: renderSettings };
+        $("#pageContent").innerHTML = pages[activePage]();
+        bindPageActions();
+      }
+      function pageHeading(eyebrow, title, subtitle, action = "") {
+        return `<div class="page-heading"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p class="subtitle">${subtitle}</p></div>${action}</div>`;
+      }
+      function renderDashboard() {
+        const txs = monthTransactions();
+        const income = txs.filter(tx => tx.type === "income").reduce((sum, tx) => sum + Number(tx.amount), 0);
+        const expenses = txs.filter(tx => tx.type === "expense").reduce((sum, tx) => sum + Number(tx.amount), 0);
+        const savings = income - expenses;
+        const savingsRate = income ? Math.round((savings / income) * 100) : 0;
+        const summary = `<section class="summary-grid" aria-label="Monthly summary">
+          <article class="card summary-card"><div class="summary-top"><span>Total income</span><span class="summary-icon">↙</span></div><div class="summary-value">${money(income)}</div><div class="summary-foot">Money in this month</div></article>
+          <article class="card summary-card"><div class="summary-top"><span>Total expenses</span><span class="summary-icon" style="color:#bf7650;background:#fbf1e8">↗</span></div><div class="summary-value">${money(expenses)}</div><div class="summary-foot">Money out this month</div></article>
+          <article class="card summary-card"><div class="summary-top"><span>Net savings</span><span class="summary-icon" style="color:#6788b8;background:#edf2f9">✳</span></div><div class="summary-value ${savings < 0 ? "negative" : ""}">${money(savings)}</div><div class="summary-foot">${income ? `${savingsRate}% of income saved` : "Income less expenses"}</div></article>
+          <article class="card summary-card"><div class="summary-top"><span>Net position</span><span class="summary-icon" style="color:#8e79af;background:#f2eff7">▣</span></div><div class="summary-value ${netPosition() < 0 ? "negative" : ""}">${money(netPosition())}</div><div class="summary-foot">${state.accounts.length} ${state.accounts.length === 1 ? "account" : "accounts"}</div></article>
+        </section>`;
+        const recent = [...txs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+        return `${pageHeading("YOUR MONEY, AT A GLANCE", `Good ${greeting()},`, "Here’s how your money is moving in " + safeText(monthLabel(selectedMonth)) + ".")}
+          ${summary}<section class="dashboard-grid">
+            <article class="card panel"><div class="panel-heading"><div><h2 class="panel-title">Cash flow</h2><p class="panel-subtitle">Income and expenses over time</p></div><select class="filter-select" id="trendRange" aria-label="Trend range"><option value="6">Last 6 months</option><option value="12">Last 12 months</option></select></div>${renderTrendChart()}</article>
+            <article class="card panel"><div class="panel-heading"><div><h2 class="panel-title">Spending by category</h2><p class="panel-subtitle">${safeText(monthLabel(selectedMonth))}</p></div><button class="link-button" data-goto="transactions">View all</button></div>${renderCategoryChart(txs)}</article>
+            <article class="card panel"><div class="panel-heading"><div><h2 class="panel-title">Budget progress</h2><p class="panel-subtitle">A little awareness goes a long way</p></div><button class="link-button" data-goto="budgets">Manage</button></div>${renderBudgetProgress(txs, 4)}</article>
+            <article class="card recent-panel"><div class="panel-heading"><div><h2 class="panel-title">Recent transactions</h2><p class="panel-subtitle">Your latest activity this month</p></div><button class="link-button" data-goto="transactions">See all →</button></div>${renderTransactionTable(recent, false, "No transactions yet. Add your first one to see it here.")}</article>
+          </section>`;
+      }
+      function greeting() {
+        const hour = new Date().getHours();
+        return hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+      }
+      function renderTrendChart() {
+        const months = [];
+        for (let i = trendMonths - 1; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(1);
+          date.setMonth(date.getMonth() - i);
+          months.push(monthKey(localDate(date)));
+        }
+        const totals = months.map(month => {
+          const txs = monthTransactions(month);
+          return {
+            month, income: txs.filter(tx => tx.type === "income").reduce((sum, tx) => sum + Number(tx.amount), 0),
+            expense: txs.filter(tx => tx.type === "expense").reduce((sum, tx) => sum + Number(tx.amount), 0)
+          };
+        });
+        const maximum = Math.max(1, ...totals.flatMap(item => [item.income, item.expense]));
+        if (!state.transactions.length) return `<div class="chart-empty">Add a few transactions to see your cash flow here.</div>`;
+        return `<div class="legend"><span><i class="dot"></i>Income</span><span><i class="dot expense"></i>Expenses</span></div><div class="trend-chart" style="--trend-count:${trendMonths}">${totals.map(item => `<div><div class="month-bars" aria-label="${safeText(monthLabel(item.month))}: income ${money(item.income)}, expenses ${money(item.expense)}"><span class="bar" style="height:${Math.max(3, item.income / maximum * 100)}%"></span><span class="bar expense" style="height:${Math.max(3, item.expense / maximum * 100)}%"></span></div><div class="month-label">${safeText(new Intl.DateTimeFormat(undefined, { month: "short" }).format(new Date(Number(item.month.slice(0, 4)), Number(item.month.slice(5, 7)) - 1)))}</div></div>`).join("")}</div>`;
+      }
+      function renderCategoryChart(txs) {
+        const expenses = txs.filter(tx => tx.type === "expense");
+        const totals = new Map();
+        expenses.forEach(tx => totals.set(tx.categoryId, (totals.get(tx.categoryId) || 0) + Number(tx.amount)));
+        const items = [...totals].sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const total = items.reduce((sum, item) => sum + item[1], 0);
+        if (!total) return `<div class="chart-empty">Your spending breakdown will appear after your first expense.</div>`;
+        let current = 0;
+        const segments = items.map(([categoryId, amount], index) => {
+          const start = current;
+          current += amount / total * 100;
+          return `${palette[index % palette.length]} ${start}% ${current}%`;
+        }).join(", ");
+        return `<div class="category-layout"><div class="donut" style="background:conic-gradient(${segments})" role="img" aria-label="Spending breakdown by category"><div class="donut-center"><strong>${money(total)}</strong><span>total spent</span></div></div><div class="category-legend">${items.map(([categoryId, amount], index) => `<div class="category-row"><span class="category-row-label"><i class="category-swatch" style="background:${palette[index % palette.length]}"></i>${safeText(categoryName(categoryId))}</span><strong>${Math.round(amount / total * 100)}%</strong></div>`).join("")}</div></div>`;
+      }
+      function renderBudgetProgress(txs, limit = Infinity) {
+        const expenses = new Map();
+        txs.filter(tx => tx.type === "expense").forEach(tx => expenses.set(tx.categoryId, (expenses.get(tx.categoryId) || 0) + Number(tx.amount)));
+        const entries = Object.entries(state.budgets).filter(([key, amount]) => key.startsWith(`${selectedMonth}:`) && Number(amount) > 0)
+          .map(([key, amount]) => {
+            const categoryId = key.slice(selectedMonth.length + 1);
+            return { categoryId, name: categoryId === "overall" ? "Overall budget" : categoryName(categoryId), budget: Number(amount), spent: categoryId === "overall" ? [...expenses.values()].reduce((sum, value) => sum + value, 0) : expenses.get(categoryId) || 0 };
+          })
+          .sort((a, b) => (b.spent / b.budget) - (a.spent / a.budget)).slice(0, limit);
+        if (!entries.length) return `<div class="empty-state"><strong>No budgets set yet</strong>Set a monthly limit to keep spending on track.<br><button class="link-button" data-goto="budgets">Create a budget →</button></div>`;
+        return `<div class="budget-list">${entries.map(item => {
+          const percent = item.spent / item.budget * 100;
+          const className = percent > 100 ? "over" : percent >= 80 ? "warning" : "";
+          return `<div><div class="budget-item-top"><span class="budget-name"><span>${item.categoryId === "overall" ? "◎" : iconMap[item.name] || "◌"}</span>${safeText(item.name)}</span><span class="budget-amount">${money(item.spent)} / ${money(item.budget)}</span></div><div class="progress-track" role="progressbar" aria-valuenow="${Math.min(100, Math.round(percent))}" aria-valuemin="0" aria-valuemax="100" aria-label="${safeText(item.name)} budget"><div class="progress-fill ${className}" style="width:${Math.min(100, percent)}%"></div></div><div class="budget-foot"><span>${percent > 100 ? "Over budget" : percent >= 100 ? "Budget reached" : percent >= 80 ? "Almost at your limit" : `${money(Math.max(0, item.budget - item.spent))} left`}</span><span>${Math.round(percent)}%</span></div></div>`;
+        }).join("")}</div>`;
+      }
+      function transactionRow(tx, actions = true) {
+        const category = getCategory(tx.categoryId);
+        const icon = iconMap[categoryName(tx.categoryId)] || (tx.type === "income" ? "↙" : "◌");
+        return `<tr>${actions ? `<td class="check-cell"><input type="checkbox" class="transaction-check" value="${safeText(tx.id)}" aria-label="Select transaction"></td>` : ""}<td><div class="transaction-name"><span class="transaction-icon">${icon}</span><span>${safeText(categoryName(tx.categoryId))}<span class="transaction-note">${safeText(tx.note || "—")}</span></span></div></td><td>${safeText(formatDate(tx.date))}</td><td><span class="type-pill">${tx.type === "income" ? "Income" : "Expense"}</span></td><td>${safeText(categoryName(tx.categoryId))}</td><td>${safeText(accountName(tx.accountId))}</td><td class="amount ${tx.type === "income" ? "positive" : ""}">${tx.type === "income" ? "+" : "−"}${money(tx.amount)}</td>${actions ? `<td><div class="table-actions"><button class="icon-button" data-edit="${safeText(tx.id)}" aria-label="Edit transaction" title="Edit">✎</button><button class="icon-button" data-delete="${safeText(tx.id)}" aria-label="Delete transaction" title="Delete">×</button></div></td>` : ""}</tr>`;
+      }
+      function renderTransactionTable(txs, actions = true, emptyMessage = "No transactions match these filters.") {
+        if (!txs.length) return `<div class="empty-state"><strong>Nothing to show just yet</strong>${safeText(emptyMessage)}${actions ? `<br><button class="link-button" data-action="add">Add a transaction →</button>` : ""}</div>`;
+        return `<div class="table-wrap"><table><thead><tr>${actions ? `<th class="check-cell"><input type="checkbox" id="selectAllTransactions" aria-label="Select all visible transactions"></th>` : ""}<th>Description</th><th>Date</th><th>Type</th><th>Category</th><th>Account</th><th style="text-align:right">Amount</th>${actions ? "<th></th>" : ""}</tr></thead><tbody>${txs.map(tx => transactionRow(tx, actions)).join("")}</tbody></table></div>`;
+      }
+      function renderTransactions() {
+        return `${pageHeading("YOUR ACTIVITY", "Transactions", "Every little thing adds up. Keep track of it all.", `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary-button" data-action="import">↑ Import CSV</button><button class="secondary-button" data-action="export">↓ Export CSV</button></div>`)}
+          <section class="card content-panel"><div class="filters">
+            <input class="filter-input" id="searchFilter" type="search" placeholder="⌕  Search notes..." aria-label="Search transaction notes">
+            <select class="filter-select" id="typeFilter" aria-label="Filter by type"><option value="">All types</option><option value="income">Income</option><option value="expense">Expense</option></select>
+            <select class="filter-select" id="categoryFilter" aria-label="Filter by category"><option value="">All categories</option>${state.categories.filter(item => !item.archived).map(item => `<option value="${safeText(item.id)}">${safeText(item.name)}</option>`).join("")}</select>
+            <select class="filter-select" id="accountFilter" aria-label="Filter by account"><option value="">All accounts</option>${state.accounts.filter(item => !item.archived).map(item => `<option value="${safeText(item.id)}">${safeText(item.name)}</option>`).join("")}</select>
+          </div><div class="filter-row">
+            <input class="filter-input" id="dateFrom" type="date" aria-label="From date">
+            <input class="filter-input" id="dateTo" type="date" aria-label="To date">
+            <input class="filter-input" id="amountMin" type="number" min="0" step="0.01" placeholder="Min amount" aria-label="Minimum amount">
+            <input class="filter-input" id="amountMax" type="number" min="0" step="0.01" placeholder="Max amount" aria-label="Maximum amount">
+          </div><div class="bulk-toolbar" id="bulkToolbar" hidden><span id="selectedCount">0 selected</span><button class="danger-button" data-action="bulk-delete">Delete selected</button></div>
+          <div id="transactionList">${renderTransactionTable(getFilteredTransactions(), true)}</div></section>`;
+      }
+      function getFilteredTransactions() {
+        const search = ($("#searchFilter")?.value || "").trim().toLowerCase();
+        const type = $("#typeFilter")?.value || "";
+        const category = $("#categoryFilter")?.value || "";
+        const account = $("#accountFilter")?.value || "";
+        const from = $("#dateFrom")?.value || "";
+        const to = $("#dateTo")?.value || "";
+        const minValue = $("#amountMin")?.value || "";
+        const maxValue = $("#amountMax")?.value || "";
+        const min = minValue ? Number(minValue) : null;
+        const max = maxValue ? Number(maxValue) : null;
+        const source = from || to ? state.transactions : monthTransactions();
+        return source.filter(tx => (!search || `${tx.note || ""} ${categoryName(tx.categoryId)} ${accountName(tx.accountId)}`.toLowerCase().includes(search)) && (!type || tx.type === type) && (!category || tx.categoryId === category) && (!account || tx.accountId === account) && (!from || tx.date >= from) && (!to || tx.date <= to) && (min === null || Number(tx.amount) / 100 >= min) && (max === null || Number(tx.amount) / 100 <= max)).sort((a, b) => b.date.localeCompare(a.date));
+      }
+      function renderAccounts() {
+        const assets = state.accounts.filter(account => account.type !== "credit").reduce((sum, account) => sum + accountBalance(account), 0);
+        const debt = state.accounts.filter(account => account.type === "credit").reduce((sum, account) => sum + accountBalance(account), 0);
+        return `${pageHeading("YOUR ACCOUNTS", "Accounts", "See the balances behind your monthly money picture.", `<button class="primary-button" data-action="new-account">＋ Add account</button>`)}
+          <section class="summary-grid"><article class="card summary-card"><div class="summary-top"><span>Total net position</span><span class="summary-icon">▣</span></div><div class="summary-value">${money(netPosition())}</div><div class="summary-foot">Across all your accounts</div></article><article class="card summary-card"><div class="summary-top"><span>Cash & assets</span><span class="summary-icon">↗</span></div><div class="summary-value">${money(assets)}</div><div class="summary-foot">Cash, bank, and wallet balances</div></article><article class="card summary-card"><div class="summary-top"><span>Credit card debt</span><span class="summary-icon" style="color:#bf7650;background:#fbf1e8">↘</span></div><div class="summary-value">${money(debt)}</div><div class="summary-foot">Outstanding card balances</div></article></section>
+          <section class="account-grid">${state.accounts.filter(account => !account.archived).map(account => {
+            const balance = accountBalance(account);
+            return `<article class="card account-card"><div class="account-card-top"><span>${safeText(account.type === "credit" ? "CREDIT CARD" : account.type.toUpperCase())}</span><span class="goal-badge">${account.type === "credit" ? "Amount owed" : "Current balance"}</span></div><div class="account-card-name">${safeText(account.name)}</div><div class="account-card-balance">${money(balance)}</div><div class="budget-foot"><span>Opening balance</span><span>${money(account.openingBalance)}</span></div></article>`;
+          }).join("")}</section>`;
+      }
+      function renderBudgets() {
+        const categories = state.categories.filter(item => !item.archived && (item.type === "expense" || item.type === "both"));
+        const overallBudget = state.budgets[`${selectedMonth}:overall`] || "";
+        const totalSpent = monthTransactions().filter(tx => tx.type === "expense").reduce((sum, tx) => sum + Number(tx.amount), 0);
+        return `${pageHeading("PLAN A LITTLE", "Your budgets", "Set a monthly spending limit for the things that matter.", `<button class="secondary-button" data-goto="transactions">View transactions</button>`)}
+          <section class="card content-panel"><div class="panel-heading"><div><h2 class="panel-title">Monthly limits</h2><p class="panel-subtitle">Budgets for ${safeText(monthLabel(selectedMonth))}. Your progress updates automatically.</p></div></div><div class="budget-management">
+          <div class="budget-edit-card"><div class="budget-edit-title"><span class="transaction-icon">◎</span>Overall monthly budget</div><div class="budget-edit-fields"><input class="form-input" type="number" min="0" step="0.01" placeholder="No limit" aria-label="Overall monthly budget" value="${overallBudget ? safeText(Number(overallBudget) / 100) : ""}" data-budget-input="overall"><button class="primary-button" data-save-budget="overall">Save</button></div><div class="budget-foot"><span>Total expenses ${money(totalSpent)}</span><span>${overallBudget ? `${Math.round(totalSpent / Number(overallBudget) * 100)}% used` : "No budget set"}</span></div></div>
+          ${categories.map(category => {
+            const budget = state.budgets[`${selectedMonth}:${category.id}`] || "";
+            const spent = monthTransactions().filter(tx => tx.type === "expense" && tx.categoryId === category.id).reduce((sum, tx) => sum + Number(tx.amount), 0);
+            return `<div class="budget-edit-card"><div class="budget-edit-title"><span class="transaction-icon">${iconMap[category.name] || "◌"}</span>${safeText(category.name)}</div><div class="budget-edit-fields"><input class="form-input" type="number" min="0" step="0.01" placeholder="No limit" aria-label="${safeText(category.name)} monthly budget" value="${budget ? safeText(Number(budget) / 100) : ""}" data-budget-input="${safeText(category.id)}"><button class="primary-button" data-save-budget="${safeText(category.id)}">Save</button></div><div class="budget-foot"><span>Spent ${money(spent)}</span><span>${budget ? `${Math.round(spent / Number(budget) * 100)}% used` : "No budget set"}</span></div></div>`;
+          }).join("")}</div></section>
+          <section class="card panel" style="margin-top:15px"><div class="panel-heading"><div><h2 class="panel-title">At a glance</h2><p class="panel-subtitle">Your progress for ${safeText(monthLabel(selectedMonth))}</p></div></div>${renderBudgetProgress(monthTransactions())}</section>`;
+      }
+      function renderCategories() {
+        const categories = state.categories.filter(item => !item.archived);
+        return `${pageHeading("MAKE IT YOURS", "Categories", "Organize your money in a way that makes sense to you.", `<button class="primary-button" data-action="new-category">＋ Add category</button>`)}
+          <section class="card content-panel"><div class="panel-heading"><div><h2 class="panel-title">Your categories</h2><p class="panel-subtitle">Defaults are ready to go. Add your own whenever you need.</p></div></div>
+          <div class="category-grid">${categories.map((category, index) => `<article class="category-card"><span class="transaction-icon" style="color:${palette[index % palette.length]}">${iconMap[category.name] || "◌"}</span><span class="category-card-name">${safeText(category.name)}<span class="category-card-meta" style="display:block;margin-top:3px">${category.type === "both" ? "Income & expense" : category.type}</span></span>${category.id.startsWith("custom-") ? `<button class="icon-button" data-rename-category="${safeText(category.id)}" aria-label="Rename ${safeText(category.name)}" title="Rename">✎</button><button class="icon-button" data-archive-category="${safeText(category.id)}" aria-label="Archive ${safeText(category.name)}" title="Archive">×</button>` : ""}</article>`).join("")}</div></section>
+          <p class="subtitle" style="margin-top:13px">Archived categories remain in your transaction history.</p>`;
+      }
+      function renderSettings() {
+        return `${pageHeading("YOUR PREFERENCES", "Settings", "A few small things to make Mintwise feel like yours.")}
+          <div class="settings-grid"><section class="card setting-card"><h2>Personal details</h2><p>Your name appears in your workspace. Your preferences are saved in this browser.</p>
+            <div class="form-field"><label for="displayName">Display name</label><input class="form-input" id="displayName" maxlength="50" value="${safeText(state.displayName)}"></div>
+            <div class="form-field"><label for="currencySelect">Preferred currency</label><select class="form-select" id="currencySelect"><option value="INR">Indian Rupee (INR)</option><option value="USD">US Dollar (USD)</option><option value="EUR">Euro (EUR)</option><option value="GBP">British Pound (GBP)</option><option value="CAD">Canadian Dollar (CAD)</option><option value="AUD">Australian Dollar (AUD)</option></select></div>
+            <div class="form-field"><label for="dateFormat">Date format</label><select class="form-select" id="dateFormat"><option>DD MMM YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
+            <button class="primary-button" data-action="save-settings">Save preferences</button>
+          </section>
+          <section class="card setting-card"><h2>Your data</h2><p>Export transactions as CSV or back up your complete local data as JSON. Your data is stored in this browser, not in an online account.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary-button" data-action="export">↓ &nbsp;Transactions CSV</button><button class="secondary-button" data-action="export-json">↓ &nbsp;Full JSON backup</button></div><p style="margin-top:13px">For privacy, avoid using this demo on a shared device or with sensitive financial information.</p></section>
+          <section class="card setting-card danger-zone"><h2>Delete your data</h2><p>Permanently remove every transaction, budget, and custom category saved by this app on this browser.</p><button class="danger-button" data-action="delete-data">Delete all my data</button></section>
+          <section class="card setting-card"><h2>About this app</h2><p>Mintwise is a simple personal finance tracker. It does not connect to banks, process payments, or send your financial information anywhere.</p><p style="margin-bottom:0">This browser-only prototype does not provide signup/login, Google OAuth, email verification, password reset, 2FA, cloud backup, or secure multi-device storage.</p></section></div>`;
+      }
+      function openModal(tx = null) {
+        editingId = tx ? tx.id : null;
+        selectedType = tx ? tx.type : "expense";
+        $("#modalTitle").textContent = tx ? "Edit transaction" : "Add transaction";
+        $("#saveTransaction").textContent = tx ? "Save changes" : "Save transaction";
+        $("#txAmount").value = tx ? Number(tx.amount) / 100 : "";
+        $("#txDate").value = tx ? tx.date : today;
+        $("#txNote").value = tx ? tx.note || "" : "";
+        $$(".type-option").forEach(button => button.classList.toggle("selected", button.dataset.type === selectedType));
+        fillTransactionCategories(tx ? tx.categoryId : state.lastCategoryId);
+        const accountSelect = $("#txAccount");
+        const accounts = state.accounts.filter(account => !account.archived);
+        accountSelect.innerHTML = accounts.map(account => `<option value="${safeText(account.id)}">${safeText(account.name)}</option>`).join("");
+        const preferredAccount = tx ? tx.accountId : state.lastAccountId;
+        if (accounts.some(account => account.id === preferredAccount)) accountSelect.value = preferredAccount;
+        else if (accounts.length) accountSelect.value = accounts[0].id;
+        $("#transactionModal").classList.add("open");
+        setTimeout(() => $("#txAmount").focus(), 0);
+      }
+      function fillTransactionCategories(selectedId) {
+        const options = state.categories.filter(category => !category.archived && (category.type === "both" || category.type === selectedType));
+        const select = $("#txCategory");
+        select.innerHTML = options.map(category => `<option value="${safeText(category.id)}">${safeText(category.name)}</option>`).join("");
+        if (selectedId && options.some(category => category.id === selectedId)) select.value = selectedId;
+        else if (options.length) select.value = options[0].id;
+      }
+      function closeModal() {
+        $("#transactionModal").classList.remove("open");
+        editingId = null;
+      }
+      function saveTransaction(event) {
+        event.preventDefault();
+        const amount = Number($("#txAmount").value);
+        const date = $("#txDate").value;
+        const categoryId = $("#txCategory").value;
+        if (!Number.isFinite(amount) || amount <= 0 || !date || !categoryId) {
+          showToast("Enter a valid amount, date, and category.");
+          return;
+        }
+        const previous = editingId ? state.transactions.find(tx => tx.id === editingId) : null;
+        const wasEditing = Boolean(editingId);
+        const priorTransactions = [...state.transactions];
+        const tx = { id: editingId || id(), type: selectedType, amount: Math.round(amount * 100), date, categoryId, accountId: $("#txAccount").value, note: $("#txNote").value.trim(), createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+        if (editingId) state.transactions = state.transactions.map(item => item.id === editingId ? tx : item);
+        else state.transactions.push(tx);
+        state.lastCategoryId = categoryId;
+        state.lastAccountId = tx.accountId;
+        persist();
+        closeModal();
+        render();
+        const alerts = budgetThresholdAlerts(priorTransactions, state.transactions, tx.date);
+        if (alerts) showToast(alerts);
+        else if (wasEditing) showToast("Transaction updated.");
+        else showUndoToast("Transaction added.", () => {
+          state.transactions = state.transactions.filter(item => item.id !== tx.id);
+          persist();
+          render();
+          showToast("Transaction add undone.");
+        });
+      }
+      function budgetThresholdAlerts(before, after, date) {
+        const month = monthKey(date);
+        const scopes = Object.entries(state.budgets).filter(([key, amount]) => key.startsWith(`${month}:`) && Number(amount) > 0);
+        for (const [key, limit] of scopes) {
+          const scopeId = key.slice(month.length + 1);
+          const spentFor = list => list.filter(tx => tx.type === "expense" && monthKey(tx.date) === month && (scopeId === "overall" || tx.categoryId === scopeId)).reduce((sum, tx) => sum + Number(tx.amount), 0);
+          const beforePercent = spentFor(before) / Number(limit) * 100;
+          const afterPercent = spentFor(after) / Number(limit) * 100;
+          if (beforePercent < 100 && afterPercent >= 100) return `Budget alert: ${scopeId === "overall" ? "overall" : categoryName(scopeId)} is at ${Math.round(afterPercent)}%.`;
+          if (beforePercent < 80 && afterPercent >= 80) return `Budget alert: ${scopeId === "overall" ? "overall" : categoryName(scopeId)} reached 80%.`;
+        }
+        return "";
+      }
+      function openAccountModal() {
+        $("#accountForm").reset();
+        $("#accountOpening").value = "0";
+        $("#accountModal").classList.add("open");
+        $("#accountName").focus();
+      }
+      function closeAccountModal() {
+        $("#accountModal").classList.remove("open");
+      }
+      function saveAccount(event) {
+        event.preventDefault();
+        const name = $("#accountName").value.trim();
+        const opening = Number($("#accountOpening").value);
+        if (!name || !Number.isFinite(opening)) {
+          showToast("Enter an account name and a valid opening balance.");
+          return;
+        }
+        const account = { id: `account-${id()}`, name, type: $("#accountType").value, openingBalance: Math.round(opening * 100), archived: false };
+        state.accounts.push(account);
+        state.lastAccountId = account.id;
+        persist();
+        closeAccountModal();
+        render();
+        showToast("Account added.");
+      }
+      function deleteTransaction(txId) {
+        const tx = state.transactions.find(item => item.id === txId);
+        if (!tx || !window.confirm(`Delete this ${tx.type} of ${money(tx.amount)}? This cannot be undone.`)) return;
+        state.transactions = state.transactions.filter(item => item.id !== txId);
+        persist();
+        render();
+        showToast("Transaction deleted.");
+      }
+      function saveBudget(categoryId) {
+        const input = $(`[data-budget-input="${CSS.escape(categoryId)}"]`);
+        const value = input ? Number(input.value) : 0;
+        const key = `${selectedMonth}:${categoryId}`;
+        let alert = "";
+        if (!input || input.value.trim() === "") {
+          delete state.budgets[key];
+        } else if (!Number.isFinite(value) || value <= 0) {
+          showToast("Enter a budget greater than zero.");
+          return;
+        } else {
+          const spent = monthTransactions().filter(tx => tx.type === "expense" && (categoryId === "overall" || tx.categoryId === categoryId)).reduce((sum, tx) => sum + Number(tx.amount), 0);
+          const previousBudget = Number(state.budgets[key]) || 0;
+          const previousPercent = previousBudget ? spent / previousBudget * 100 : 0;
+          state.budgets[key] = Math.round(value * 100);
+          const newPercent = spent / state.budgets[key] * 100;
+          if (previousPercent < 100 && newPercent >= 100) alert = `Budget alert: ${categoryId === "overall" ? "overall" : categoryName(categoryId)} is at ${Math.round(newPercent)}%.`;
+          else if (previousPercent < 80 && newPercent >= 80) alert = `Budget alert: ${categoryId === "overall" ? "overall" : categoryName(categoryId)} reached 80%.`;
+        }
+        persist();
+        render();
+        showToast(alert || (input.value.trim() ? "Budget saved." : "Budget removed."));
+      }
+      function exportCsv() {
+        const rows = [["Date", "Type", "Amount", "Currency", "Category", "Account", "Note"], ...[...state.transactions].sort((a, b) => b.date.localeCompare(a.date)).map(tx => [tx.date, tx.type, (Number(tx.amount) / 100).toFixed(2), currencyCode(), categoryName(tx.categoryId), accountName(tx.accountId), tx.note || ""])];
+        const csv = rows.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `mintwise-transactions-${today}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showToast("Your CSV export is ready.");
+      }
+      function parseCsv(text) {
+        const rows = [];
+        let row = [];
+        let cell = "";
+        let quoted = false;
+        const source = text.replace(/^\uFEFF/, "");
+        for (let i = 0; i < source.length; i++) {
+          const char = source[i];
+          if (char === '"' && quoted && source[i + 1] === '"') {
+            cell += '"';
+            i++;
+          } else if (char === '"') {
+            quoted = !quoted;
+          } else if (char === "," && !quoted) {
+            row.push(cell);
+            cell = "";
+          } else if ((char === "\n" || char === "\r") && !quoted) {
+            if (char === "\r" && source[i + 1] === "\n") i++;
+            row.push(cell);
+            if (row.some(value => value.trim())) rows.push(row);
+            row = [];
+            cell = "";
+          } else {
+            cell += char;
+          }
+        }
+        if (cell.length || row.length) {
+          row.push(cell);
+          if (row.some(value => value.trim())) rows.push(row);
+        }
+        return rows;
+      }
+      function guessImportMapping(headers) {
+        const find = pattern => {
+          const index = headers.findIndex(header => pattern.test(header.toLowerCase().replace(/[^a-z]/g, "")));
+          return index < 0 ? "" : String(index);
+        };
+        return {
+          date: find(/^(date|transactiondate|posteddate)$/),
+          amount: find(/^(amount|value|total|transactionamount)$/),
+          type: find(/^(type|transactiontype|direction)$/),
+          category: find(/^(category|group)$/),
+          account: find(/^(account|accountname)$/),
+          note: find(/^(note|description|memo|details)$/)
+        };
+      }
+      function openImport() {
+        importHeaders = [];
+        importRows = [];
+        importMapping = {};
+        $("#importContent").innerHTML = `<div class="form-field"><label for="csvFile">CSV file</label><input class="form-input" id="csvFile" type="file" accept=".csv,text/csv"><p class="panel-subtitle">A header row is required. Your file is read in this browser and is not uploaded.</p></div>`;
+        $("#importModal").classList.add("open");
+        $("#csvFile").addEventListener("change", async event => {
+          const file = event.target.files[0];
+          if (!file) return;
+          try {
+            const rows = parseCsv(await file.text());
+            if (rows.length < 2) {
+              showToast("The CSV needs a header row and at least one data row.");
+              return;
+            }
+            importHeaders = rows[0].map((header, index) => header.trim() || `Column ${index + 1}`);
+            importRows = rows.slice(1);
+            importMapping = guessImportMapping(importHeaders);
+            renderImportContent();
+          } catch (error) {
+            console.error("Could not read the CSV file.", error);
+            showToast("Could not read that CSV. Please choose another file.");
+          }
+        });
+      }
+      function mappedImportRows() {
+        const valueAt = (row, key) => {
+          const index = importMapping[key];
+          return index === "" || index === undefined ? "" : String(row[Number(index)] || "").trim();
+        };
+        return importRows.map((row, index) => {
+          const rawAmount = valueAt(row, "amount");
+          const numericAmount = Number(rawAmount.replace(/[^\d.-]/g, ""));
+          const dateText = valueAt(row, "date");
+          const parsedDate = /^\d{4}-\d{2}-\d{2}$/.test(dateText) ? new Date(`${dateText}T12:00:00`) : new Date(dateText);
+          const date = Number.isNaN(parsedDate.getTime()) ? "" : localDate(parsedDate);
+          const rawType = valueAt(row, "type").toLowerCase();
+          const type = /income|credit|deposit|salary/.test(rawType) ? "income" : "expense";
+          return {
+            index, date, amount: Math.round(Math.abs(numericAmount) * 100), type,
+            category: valueAt(row, "category"), account: valueAt(row, "account"), note: valueAt(row, "note"),
+            valid: Boolean(date) && Number.isFinite(numericAmount) && numericAmount !== 0
+          };
+        });
+      }
+      function importDuplicateKey(tx) {
+        return `${tx.date}|${tx.amount}|${(tx.note || "").trim().toLowerCase()}`;
+      }
+      function renderImportContent() {
+        const mappings = [
+          ["date", "Date", true], ["amount", "Amount", true], ["type", "Type", false],
+          ["category", "Category", false], ["account", "Account", false], ["note", "Note", false]
+        ];
+        const rows = mappedImportRows();
+        const existing = new Set(state.transactions.map(importDuplicateKey));
+        const duplicateRows = new Set();
+        let duplicates = 0;
+        rows.forEach(row => {
+          if (!row.valid) return;
+          const key = importDuplicateKey(row);
+          if (existing.has(key)) {
+            duplicates++;
+            duplicateRows.add(row.index);
+          }
+          existing.add(key);
+        });
+        const valid = rows.filter(row => row.valid).length;
+        const mappingFields = mappings.map(([key, label, required]) => `<div class="form-field"><label for="map-${key}">${label}${required ? " *" : ""}</label><select class="form-select" id="map-${key}" data-import-map="${key}"><option value="">Not provided</option>${importHeaders.map((header, index) => `<option value="${index}" ${importMapping[key] === String(index) ? "selected" : ""}>${safeText(header)}</option>`).join("")}</select></div>`).join("");
+        const preview = rows.slice(0, 20).map(row => {
+          const duplicate = duplicateRows.has(row.index);
+          return `<tr><td>${safeText(row.date || "Invalid date")}</td><td>${row.valid ? money(row.amount) : "Invalid amount"}</td><td>${row.type}</td><td>${safeText(row.category || "Other")}</td><td>${safeText(row.account || accountName(state.lastAccountId))}</td><td>${safeText(row.note || "—")}</td><td>${row.valid ? duplicate ? "Duplicate" : "Ready" : "Check row"}</td></tr>`;
+        }).join("");
+        $("#importContent").innerHTML = `<div class="mapping-grid">${mappingFields}</div>
+          <div class="import-summary">${valid} valid row${valid === 1 ? "" : "s"} · ${rows.length - valid} invalid · ${duplicates} duplicate${duplicates === 1 ? "" : "s"} detected. Showing up to 20 rows.</div>
+          <div class="preview-table"><table><thead><tr><th>Date</th><th>Amount</th><th>Type</th><th>Category</th><th>Account</th><th>Note</th><th>Status</th></tr></thead><tbody>${preview}</tbody></table></div>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:12px;color:#59665e;font-size:11px"><input id="skipImportDuplicates" type="checkbox" checked> Skip duplicates (same date, amount, and note)</label>
+          <div class="modal-actions"><button class="secondary-button" type="button" data-import-cancel>Cancel</button><button class="primary-button" type="button" data-import-commit ${valid ? "" : "disabled"}>Import ${valid} transaction${valid === 1 ? "" : "s"}</button></div>`;
+        $$("[data-import-map]").forEach(select => select.addEventListener("change", () => {
+          importMapping[select.dataset.importMap] = select.value;
+          renderImportContent();
+        }));
+        $("[data-import-cancel]").addEventListener("click", closeImport);
+        $("[data-import-commit]").addEventListener("click", commitImport);
+      }
+      function commitImport() {
+        const mapped = mappedImportRows().filter(row => row.valid);
+        const skipDuplicates = $("#skipImportDuplicates").checked;
+        const existing = new Set(state.transactions.map(importDuplicateKey));
+        let imported = 0;
+        let skipped = importRows.length - mapped.length;
+        const defaultAccount = state.accounts.find(account => !account.archived);
+        mapped.forEach(row => {
+          if (skipDuplicates && existing.has(importDuplicateKey(row))) {
+            skipped++;
+            return;
+          }
+          let category = state.categories.find(item => !item.archived && item.name.toLowerCase() === row.category.toLowerCase());
+          if (!category) {
+            category = { id: `custom-${id()}`, name: row.category || "Other", type: row.type, archived: false };
+            state.categories.push(category);
+          }
+          const account = state.accounts.find(item => !item.archived && item.name.toLowerCase() === row.account.toLowerCase()) || defaultAccount;
+          const tx = { id: id(), type: row.type, amount: row.amount, date: row.date, categoryId: category.id, accountId: account.id, note: row.note, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+          state.transactions.push(tx);
+          existing.add(importDuplicateKey(tx));
+          imported++;
+        });
+        persist();
+        closeImport();
+        render();
+        showToast(`Import complete: ${imported} imported, ${skipped} skipped.`);
+      }
+      function closeImport() {
+        $("#importModal").classList.remove("open");
+      }
+      function exportJson() {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `mintwise-backup-${today}.json`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showToast("Your JSON export is ready.");
+      }
+      function addCategory() {
+        const name = window.prompt("Name your category:");
+        if (name === null) return;
+        const cleanName = name.trim();
+        if (!cleanName || cleanName.length > 30) {
+          showToast("Category names must be 1–30 characters.");
+          return;
+        }
+        if (state.categories.some(category => !category.archived && category.name.toLowerCase() === cleanName.toLowerCase())) {
+          showToast("That category already exists.");
+          return;
+        }
+        const type = window.confirm("Should this category be for income? Choose Cancel for expenses.") ? "income" : "expense";
+        state.categories.push({ id: `custom-${id()}`, name: cleanName, type, archived: false });
+        persist();
+        render();
+        showToast("Category added.");
+      }
+      function renameCategory(categoryId) {
+        const category = getCategory(categoryId);
+        if (!category) return;
+        const name = window.prompt("Rename category:", category.name);
+        if (name === null) return;
+        const cleanName = name.trim();
+        if (!cleanName || cleanName.length > 30) {
+          showToast("Category names must be 1–30 characters.");
+          return;
+        }
+        if (state.categories.some(item => item.id !== categoryId && !item.archived && item.name.toLowerCase() === cleanName.toLowerCase())) {
+          showToast("That category already exists.");
+          return;
+        }
+        category.name = cleanName;
+        persist();
+        render();
+        showToast("Category renamed.");
+      }
+      function archiveCategory(categoryId) {
+        const category = getCategory(categoryId);
+        if (!category || !window.confirm(`Archive "${category.name}"? Past transactions will remain in your history.`)) return;
+        category.archived = true;
+        persist();
+        render();
+        showToast("Category archived.");
+      }
+      function updateBulkToolbar() {
+        const selected = $$(".transaction-check:checked");
+        const toolbar = $("#bulkToolbar");
+        if (!toolbar) return;
+        toolbar.hidden = selected.length === 0;
+        $("#selectedCount").textContent = `${selected.length} selected`;
+      }
+      function bulkDeleteTransactions() {
+        const selected = $$(".transaction-check:checked").map(input => input.value);
+        if (!selected.length || !window.confirm(`Permanently delete ${selected.length} selected transaction${selected.length === 1 ? "" : "s"}?`)) return;
+        const ids = new Set(selected);
+        state.transactions = state.transactions.filter(tx => !ids.has(tx.id));
+        persist();
+        render();
+        showToast(`${selected.length} transaction${selected.length === 1 ? "" : "s"} deleted.`);
+      }
+      function bindPageActions() {
+        const search = $("#searchFilter");
+        if (search) {
+          const refreshList = () => {
+            $("#transactionList").innerHTML = renderTransactionTable(getFilteredTransactions(), true);
+            bindTableActions();
+            updateBulkToolbar();
+          };
+          ["input", "change"].forEach(event => search.addEventListener(event, refreshList));
+          ["#typeFilter", "#categoryFilter", "#accountFilter", "#dateFrom", "#dateTo", "#amountMin", "#amountMax"].forEach(selector => $(selector).addEventListener("input", refreshList));
+          bindTableActions();
+        }
+        $$("[data-goto]").forEach(button => button.addEventListener("click", () => setPage(button.dataset.goto)));
+        $$("[data-action='export']").forEach(button => button.addEventListener("click", exportCsv));
+        $$("[data-action='export-json']").forEach(button => button.addEventListener("click", exportJson));
+        $$("[data-action='import']").forEach(button => button.addEventListener("click", openImport));
+        $$("[data-action='bulk-delete']").forEach(button => button.addEventListener("click", bulkDeleteTransactions));
+        $$("[data-save-budget]").forEach(button => button.addEventListener("click", () => saveBudget(button.dataset.saveBudget)));
+        $$("[data-action='new-category']").forEach(button => button.addEventListener("click", addCategory));
+        $$("[data-action='new-account']").forEach(button => button.addEventListener("click", openAccountModal));
+        $$("[data-rename-category]").forEach(button => button.addEventListener("click", () => renameCategory(button.dataset.renameCategory)));
+        $$("[data-archive-category]").forEach(button => button.addEventListener("click", () => archiveCategory(button.dataset.archiveCategory)));
+        if ($("#trendRange")) {
+          $("#trendRange").value = String(trendMonths);
+          $("#trendRange").addEventListener("change", event => {
+            trendMonths = Number(event.target.value) === 12 ? 12 : 6;
+            render();
+          });
+        }
+        $$("[data-action='save-settings']").forEach(button => button.addEventListener("click", () => {
+          state.displayName = $("#displayName").value.trim() || "Your account";
+          state.currency = $("#currencySelect").value;
+          state.dateFormat = $("#dateFormat").value;
+          persist();
+          render();
+          showToast("Preferences saved.");
+        }));
+        $$("[data-action='delete-data']").forEach(button => button.addEventListener("click", () => {
+          if (!window.confirm("Permanently delete all your transactions, budgets, categories, and preferences from this browser?")) return;
+          state = baseState();
+          persist();
+          selectedMonth = monthKey(today);
+          setPage("dashboard");
+          showToast("Your local data has been deleted.");
+        }));
+        if ($("#currencySelect")) $("#currencySelect").value = currencyCode();
+        if ($("#dateFormat")) $("#dateFormat").value = state.dateFormat;
+      }
+      function bindTableActions() {
+        $$("[data-edit]").forEach(button => button.addEventListener("click", () => {
+          const tx = state.transactions.find(item => item.id === button.dataset.edit);
+          if (tx) openModal(tx);
+        }));
+        $$("[data-delete]").forEach(button => button.addEventListener("click", () => deleteTransaction(button.dataset.delete)));
+        $$("[data-action='add']").forEach(button => button.addEventListener("click", () => openModal()));
+        $$(".transaction-check").forEach(input => input.addEventListener("change", updateBulkToolbar));
+        if ($("#selectAllTransactions")) $("#selectAllTransactions").addEventListener("change", event => {
+          $$(".transaction-check").forEach(input => { input.checked = event.target.checked; });
+          updateBulkToolbar();
+        });
+      }
+      $$(".nav-button[data-page]").forEach(button => button.addEventListener("click", () => setPage(button.dataset.page)));
+      $("#monthSelect").addEventListener("change", event => { selectedMonth = event.target.value; render(); });
+      $("#quickAdd").addEventListener("click", () => openModal());
+      $("#floatingAdd").addEventListener("click", () => openModal());
+      $("#mobileMenu").addEventListener("click", () => $("#sidebar").classList.toggle("mobile-open"));
+      $("#closeModal").addEventListener("click", closeModal);
+      $("#cancelModal").addEventListener("click", closeModal);
+      $("#transactionModal").addEventListener("click", event => { if (event.target === $("#transactionModal")) closeModal(); });
+      $("#transactionForm").addEventListener("submit", saveTransaction);
+      $("#closeImport").addEventListener("click", closeImport);
+      $("#importModal").addEventListener("click", event => { if (event.target === $("#importModal")) closeImport(); });
+      $("#closeAccount").addEventListener("click", closeAccountModal);
+      $("#cancelAccount").addEventListener("click", closeAccountModal);
+      $("#accountModal").addEventListener("click", event => { if (event.target === $("#accountModal")) closeAccountModal(); });
+      $("#accountForm").addEventListener("submit", saveAccount);
+      $$(".type-option").forEach(button => button.addEventListener("click", () => {
+        selectedType = button.dataset.type;
+        $$(".type-option").forEach(item => item.classList.toggle("selected", item === button));
+        fillTransactionCategories(state.lastCategoryId);
+      }));
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          closeModal();
+          closeImport();
+          closeAccountModal();
+          $("#sidebar").classList.remove("mobile-open");
+        }
+        const target = event.target;
+        const editingText = target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+        if (!editingText && event.key.toLowerCase() === "n") openModal();
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>
